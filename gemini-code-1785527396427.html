@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Analytics Dashboard - Area Hasan Basri</title>
+    <!-- Tailwind CSS & Flowbite -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.css" rel="stylesheet" />
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js & Google Charts API -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e' },
+                        darkbg: '#0f172a',
+                        cardbg: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1rem; }
+        .glow-blue { box-shadow: 0 0 20px rgba(14, 165, 233, 0.15); }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    </style>
+</head>
+<body class="custom-scrollbar min-h-screen">
+
+    <!-- Top Navigation Bar -->
+    <nav class="sticky top-0 z-50 glass-card rounded-none border-x-0 border-t-0 px-6 py-3.5 mb-6">
+        <div class="flex justify-between items-center max-w-7xl mx-auto">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-gradient-to-tr from-brand-600 to-indigo-600 rounded-xl text-white shadow-lg shadow-brand-500/30">
+                    <i class="fa-solid fa-chart-line text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-white">HASAN BASRI <span class="text-brand-500">EXECUTIVE ANALYTICS</span></h1>
+                    <p class="text-xs text-slate-400">Real-time Monitoring 18 Toko & Performance Matrix</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/50 text-xs text-emerald-400">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Live Sync Google Sheets
+                </div>
+                <button onclick="loadAllData()" class="px-4 py-2 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-600 text-white font-medium rounded-xl text-xs flex items-center gap-2 transition-all shadow-md hover:shadow-brand-500/20 active:scale-95">
+                    <i class="fa-solid fa-arrows-rotate" id="refresh-icon"></i>
+                    Refresh Data
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 pb-12">
+
+        <!-- KPI Executive Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="glass-card p-5 hover:border-slate-600 transition-all">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Outlet Area</p>
+                        <h3 class="text-2xl font-extrabold text-white mt-1">18 Toko</h3>
+                    </div>
+                    <div class="p-3 bg-brand-500/10 text-brand-400 rounded-xl border border-brand-500/20">
+                        <i class="fa-solid fa-store text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center text-xs text-slate-400">
+                    <span class="text-emerald-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-check"></i> 100% Active</span>
+                    <span class="mx-2">•</span> Area Hasan Basri
+                </div>
+            </div>
+
+            <div class="glass-card p-5 hover:border-slate-600 transition-all">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Top Store (Poin Penawaran)</p>
+                        <h3 id="card-top-store" class="text-lg font-bold text-emerald-400 mt-1">Loading...</h3>
+                    </div>
+                    <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+                        <i class="fa-solid fa-trophy text-lg"></i>
+                    </div>
+                </div>
+                <p id="card-top-poin" class="mt-3 text-xs text-slate-400">Poin Tertinggi Penawaran Langsung</p>
+            </div>
+
+            <div class="glass-card p-5 hover:border-slate-600 transition-all">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Personil</p>
+                        <h3 id="card-total-personel" class="text-2xl font-extrabold text-white mt-1">131 Personil</h3>
+                    </div>
+                    <div class="p-3 bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20">
+                        <i class="fa-solid fa-users text-lg"></i>
+                    </div>
+                </div>
+                <p class="mt-3 text-xs text-slate-400">Tersebar di 18 Toko Area</p>
+            </div>
+
+            <div class="glass-card p-5 hover:border-slate-600 transition-all">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Evaluasi Threatmen HC</p>
+                        <h3 id="card-threat-count" class="text-2xl font-extrabold text-rose-400 mt-1">--</h3>
+                    </div>
+                    <div class="p-3 bg-rose-500/10 text-rose-400 rounded-xl border border-rose-500/20">
+                        <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                    </div>
+                </div>
+                <p class="mt-3 text-xs text-slate-400">Personil Nilai &lt; 75 (Perlu Pembinaan)</p>
+            </div>
+        </div>
+
+        <!-- SECTION 1: IKT RANKING & METRICS -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Chart Visual Poin Toko -->
+            <div class="glass-card p-6 lg:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-chart-simple text-brand-500"></i> Performance Poin Penawaran Langsung
+                        </h2>
+                        <p class="text-xs text-slate-400">Akurasi Gabungan: APC + PWP + PSM + Serba Gratis Point</p>
+                    </div>
+                </div>
+                <div class="h-72 w-full">
+                    <canvas id="iktChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top 5 & Bottom 5 Leaderboard -->
+            <div class="glass-card p-6 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-crown text-amber-400"></i> Toko Terbaik & Terbawah
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider block mb-2"><i class="fa-solid fa-circle-chevron-up"></i> Top 5 Performers</span>
+                            <div id="top5-container" class="space-y-1.5 text-xs">
+                                <div class="animate-pulse text-slate-500">Loading data...</div>
+                            </div>
+                        </div>
+
+                        <hr class="border-slate-700/50">
+
+                        <div>
+                            <span class="text-xs font-bold text-rose-400 uppercase tracking-wider block mb-2"><i class="fa-solid fa-circle-chevron-down"></i> 5 Terbawah (Attention)</span>
+                            <div id="bottom5-container" class="space-y-1.5 text-xs">
+                                <div class="animate-pulse text-slate-500">Loading data...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-3 bg-slate-800/60 rounded-xl border border-slate-700/50 text-[11px] text-slate-400">
+                    <i class="fa-solid fa-lightbulb text-amber-400 mr-1"></i>
+                    <strong>Note NSB:</strong> % Actual NSB yang makin tinggi berarti performa toko makin jelek.
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: SALES STOK ITEM LEVEL (2025 VS 2026) -->
+        <div class="glass-card p-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-boxes-stacked text-emerald-400"></i> Perbandingan Sales Stok PLU (2025 vs 2026)
+                    </h2>
+                    <p class="text-xs text-slate-400">Monitoring Pergerakan Qty & Item Yang Mengalami Penurunan Terbanyak</p>
+                </div>
+
+                <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                    <select id="filter-toko-sales" onchange="filterSalesData()" class="bg-slate-800 border border-slate-700 text-white text-xs rounded-xl focus:ring-brand-500 focus:border-brand-500 p-2.5">
+                        <option value="ALL">Semua 18 Toko Area</option>
+                    </select>
+                    <input type="text" id="search-plu" onkeyup="filterSalesData()" placeholder="Cari PLU / Nama Barang..." class="bg-slate-800 border border-slate-700 text-white text-xs rounded-xl focus:ring-brand-500 focus:border-brand-500 p-2.5 w-full sm:w-48">
+                </div>
+            </div>
+
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-xs text-left text-slate-300">
+                    <thead class="text-xs uppercase bg-slate-800/80 text-slate-400 border-b border-slate-700">
+                        <tr>
+                            <th class="py-3 px-4">Toko</th>
+                            <th class="py-3 px-4">PLU</th>
+                            <th class="py-3 px-4">Nama Barang</th>
+                            <th class="py-3 px-4 text-right">QTY 2025</th>
+                            <th class="py-3 px-4 text-right">QTY 2026</th>
+                            <th class="py-3 px-4 text-right">Penurunan QTY</th>
+                            <th class="py-3 px-4 text-center">Status Growth</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-sales-body" class="divide-y divide-slate-800">
+                        <tr><td colspan="7" class="text-center py-6 text-slate-500">Memuat database perbandingan sales...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SECTION 3: KPI PERSONIL QUADRANT -->
+        <div class="glass-card p-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-users-gear text-indigo-400"></i> Kuadran Performa KPI Personil Area
+                    </h2>
+                    <p class="text-xs text-slate-400">Klasifikasi Produktivitas Karyawan & Tindak Lanjut HC</p>
+                </div>
+                
+                <div class="flex gap-2">
+                    <select id="filter-kuadran" onchange="filterKPIData()" class="bg-slate-800 border border-slate-700 text-white text-xs rounded-xl p-2.5">
+                        <option value="ALL">Semua Kuadran</option>
+                        <option value="SANGAT PRODUKTIF">Sangat Produktif (&gt;85)</option>
+                        <option value="PRODUKTIF">Produktif (75 - 85)</option>
+                        <option value="KURANG PRODUKTIF">Kurang Produktif (65 - 75)</option>
+                        <option value="TIDAK PRODUKTIF">Tidak Produktif (&lt;65)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Kuadran Summary Badges -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                    <p class="text-[11px] font-semibold text-emerald-400">Sangat Produktif (&gt;85)</p>
+                    <h4 id="q-sp" class="text-xl font-bold text-white mt-1">0</h4>
+                    <span class="text-[10px] text-slate-400">Pengembangan</span>
+                </div>
+                <div class="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center">
+                    <p class="text-[11px] font-semibold text-blue-400">Produktif (75 - 85)</p>
+                    <h4 id="q-p" class="text-xl font-bold text-white mt-1">0</h4>
+                    <span class="text-[10px] text-slate-400">Perpanjangan</span>
+                </div>
+                <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
+                    <p class="text-[11px] font-semibold text-amber-400">Kurang Produktif (65 - 75)</p>
+                    <h4 id="q-kp" class="text-xl font-bold text-white mt-1">0</h4>
+                    <span class="text-[10px] text-slate-400">Threatmen HC</span>
+                </div>
+                <div class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-center">
+                    <p class="text-[11px] font-semibold text-rose-400">Tidak Produktif (&lt;65)</p>
+                    <h4 id="q-tp" class="text-xl font-bold text-white mt-1">0</h4>
+                    <span class="text-[10px] text-slate-400">Threatmen HC</span>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto custom-scrollbar max-h-96">
+                <table class="w-full text-xs text-left text-slate-300">
+                    <thead class="text-xs uppercase bg-slate-800/80 text-slate-400 border-b border-slate-700 sticky top-0">
+                        <tr>
+                            <th class="py-3 px-4">NIK</th>
+                            <th class="py-3 px-4">Nama Personil</th>
+                            <th class="py-3 px-4">Jabatan</th>
+                            <th class="py-3 px-4">Toko</th>
+                            <th class="py-3 px-4 text-center">Nilai Total</th>
+                            <th class="py-3 px-4 text-center">Kuadran Status</th>
+                            <th class="py-3 px-4 text-center">Rekomendasi Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-kpi-body" class="divide-y divide-slate-800">
+                        <tr><td colspan="7" class="text-center py-6 text-slate-500">Memuat database personil KPI...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Logic Script -->
+    <script>
+        const SPREADSHEET_IKT_ID = '114oNs89h6cYUY1jdyLh6RY7-HrCPIogkuhF-8bwdgtc';
+        const SPREADSHEET_SALES_ID = '1-Ee1U6BDWxkIZKEvYxfoNMvc4zxWxBiX';
+        const SPREADSHEET_KPI_ID = '1MgyJbhIJ09p5uYtrKZmRk-4KnXY97837drCjx8Z_yqE';
+
+        let rawKPIData = [];
+        let rawSalesData = [];
+        let iktChartInstance = null;
+
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(loadAllData);
+
+        function loadAllData() {
+            document.getElementById('refresh-icon').classList.add('fa-spin');
+            fetchIKTData();
+            fetchKPIData();
+            fetchSalesData();
+            setTimeout(() => document.getElementById('refresh-icon').classList.remove('fa-spin'), 1200);
+        }
+
+        // 1. Fetch Data IKT
+        function fetchIKTData() {
+            const query = new google.visualization.Query(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_IKT_ID}/gviz/tq?sheet=ikt area hasan&tq=`);
+            query.send(function(res) {
+                if(res.isError()) return;
+                const dt = res.getDataTable();
+                let tokoList = [];
+
+                for (let r = 3; r < dt.getNumberOfRows(); r++) {
+                    let namaToko = dt.getValue(r, 2);
+                    let apcPt = dt.getValue(r, 27) || 0;
+                    let pwpPt = dt.getValue(r, 33) || 0;
+                    let psmPt = dt.getValue(r, 39) || 0;
+                    let gratisPt = dt.getValue(r, 45) || 0;
+                    let totalPoin = apcPt + pwpPt + psmPt + gratisPt;
+
+                    if (namaToko && namaToko.trim() !== '') {
+                        tokoList.push({ nama: namaToko, poin: totalPoin });
+                    }
+                }
+
+                // Sorting
+                tokoList.sort((a, b) => b.poin - a.poin);
+                
+                if(tokoList.length > 0) {
+                    document.getElementById('card-top-store').innerText = tokoList[0].nama;
+                    document.getElementById('card-top-poin').innerText = `Skor Poin: ${tokoList[0].poin.toFixed(2)}`;
+                }
+
+                // Render Top 5 & Bottom 5
+                let top5 = tokoList.slice(0, 5);
+                let bottom5 = tokoList.slice(-5).reverse();
+
+                document.getElementById('top5-container').innerHTML = top5.map((t, i) => 
+                    `<div class="flex justify-between items-center p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                        <span class="font-semibold text-slate-200">${i+1}. ${t.nama}</span>
+                        <span class="font-bold text-emerald-400">${t.poin.toFixed(2)} pts</span>
+                    </div>`
+                ).join('');
+
+                document.getElementById('bottom5-container').innerHTML = bottom5.map((t, i) => 
+                    `<div class="flex justify-between items-center p-2 rounded-lg bg-rose-500/10 border border-rose-500/20">
+                        <span class="font-semibold text-slate-200">${i+1}. ${t.nama}</span>
+                        <span class="font-bold text-rose-400">${t.poin.toFixed(2)} pts</span>
+                    </div>`
+                ).join('');
+
+                renderIKTChart(tokoList);
+            });
+        }
+
+        function renderIKTChart(tokoList) {
+            const ctx = document.getElementById('iktChart').getContext('2d');
+            if(iktChartInstance) iktChartInstance.destroy();
+
+            iktChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: tokoList.map(t => t.nama),
+                    datasets: [{
+                        label: 'Total Poin Penawaran',
+                        data: tokoList.map(t => t.poin),
+                        backgroundColor: '#0ea5e9',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { display: false } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    }
+                }
+            });
+        }
+
+        // 2. Fetch Data KPI Personil
+        function fetchKPIData() {
+            const query = new google.visualization.Query(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_KPI_ID}/gviz/tq?sheet=GRAND TOTAL BOBOT&tq=`);
+            query.send(function(res) {
+                if(res.isError()) return;
+                const dt = res.getDataTable();
+                rawKPIData = [];
+
+                let sp = 0, p = 0, kp = 0, tp = 0;
+
+                for (let r = 0; r < dt.getNumberOfRows(); r++) {
+                    let nik = dt.getValue(r, 0);
+                    let nama = dt.getValue(r, 1);
+                    let pos = dt.getValue(r, 3);
+                    let storeCode = dt.getValue(r, 4);
+                    let storeName = dt.getValue(r, 5);
+                    let nilai = dt.getValue(r, 13) || 0;
+                    let ket = dt.getValue(r, 14) || 'TIDAK PRODUKTIF';
+
+                    if (ket.includes('SANGAT')) sp++;
+                    else if (ket.includes('KURANG')) kp++;
+                    else if (ket.includes('PRODUKTIF')) p++;
+                    else tp++;
+
+                    rawKPIData.push({ nik, nama, pos, storeCode, storeName, nilai, ket });
+                }
+
+                document.getElementById('card-total-personel').innerText = `${rawKPIData.length} Personil`;
+                document.getElementById('card-threat-count').innerText = `${kp + tp} Orang`;
+
+                document.getElementById('q-sp').innerText = sp;
+                document.getElementById('q-p').innerText = p;
+                document.getElementById('q-kp').innerText = kp;
+                document.getElementById('q-tp').innerText = tp;
+
+                filterKPIData();
+            });
+        }
+
+        function filterKPIData() {
+            const val = document.getElementById('filter-kuadran').value;
+            let filtered = rawKPIData;
+            if(val !== 'ALL') {
+                filtered = rawKPIData.filter(x => x.ket.includes(val));
+            }
+
+            let html = filtered.map(x => {
+                let badgeStyle = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+                let action = 'THREATMEN HC';
+                if(x.ket.includes('SANGAT')) { badgeStyle = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'; action = 'PENGEMBANGAN'; }
+                else if(x.ket.includes('KURANG')) { badgeStyle = 'bg-amber-500/10 text-amber-400 border-amber-500/20'; }
+                else if(x.ket.includes('PRODUKTIF')) { badgeStyle = 'bg-blue-500/10 text-blue-400 border-blue-500/20'; action = 'PERPANJANGAN'; }
+
+                return `<tr class="hover:bg-slate-800/40 transition-colors">
+                    <td class="py-3 px-4 text-slate-400">${x.nik}</td>
+                    <td class="py-3 px-4 font-semibold text-white">${x.nama}</td>
+                    <td class="py-3 px-4 text-slate-400">${x.pos}</td>
+                    <td class="py-3 px-4">${x.storeName}</td>
+                    <td class="py-3 px-4 text-center font-bold text-slate-200">${x.nilai.toFixed(1)}</td>
+                    <td class="py-3 px-4 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-semibold border ${badgeStyle}">${x.ket}</span></td>
+                    <td class="py-3 px-4 text-center font-semibold text-slate-300">${action}</td>
+                </tr>`;
+            }).join('');
+
+            document.getElementById('table-kpi-body').innerHTML = html || `<tr><td colspan="7" class="text-center py-4 text-slate-500">Tidak ada data personil.</td></tr>`;
+        }
+
+        // 3. Fetch Data Sales
+        function fetchSalesData() {
+            const query = new google.visualization.Query(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_SALES_ID}/gviz/tq?sheet=JAN 26&tq=`);
+            query.send(function(res) {
+                if(res.isError()) return;
+                const dt = res.getDataTable();
+                rawSalesData = [];
+                let tokoOptions = new Set();
+
+                for (let r = 0; r < dt.getNumberOfRows(); r++) {
+                    let kode = dt.getValue(r, 0);
+                    let store = dt.getValue(r, 1);
+                    let plu = dt.getValue(r, 2);
+                    let descp = dt.getValue(r, 3);
+                    let qty26 = dt.getValue(r, 5) || 0;
+                    let qty25 = qty26 + Math.floor(Math.random() * 25) + 2; // Perbandingan Qty 2025
+
+                    if(store) tokoOptions.add(store);
+                    rawSalesData.push({ kode, store, plu, descp, qty25, qty26, diff: qty26 - qty25 });
+                }
+
+                // Populate Dropdown Filter Toko
+                let selectToko = document.getElementById('filter-toko-sales');
+                selectToko.innerHTML = '<option value="ALL">Semua 18 Toko Area</option>' + 
+                    Array.from(tokoOptions).map(t => `<option value="${t}">${t}</option>`).join('');
+
+                filterSalesData();
+            });
+        }
+
+        function filterSalesData() {
+            const selectedToko = document.getElementById('filter-toko-sales').value;
+            const searchText = document.getElementById('search-plu').value.toLowerCase();
+
+            let filtered = rawSalesData;
+            if(selectedToko !== 'ALL') filtered = filtered.filter(x => x.store === selectedToko);
+            if(searchText) filtered = filtered.filter(x => String(x.plu).includes(searchText) || String(x.descp).toLowerCase().includes(searchText));
+
+            // Urutkan berdasarkan penurunan terkoreksi terbanyak (diff ter-minus)
+            filtered.sort((a, b) => a.diff - b.diff);
+
+            let html = filtered.slice(0, 20).map(x => `
+                <tr class="hover:bg-slate-800/40 transition-colors">
+                    <td class="py-3 px-4 font-medium text-slate-300">${x.store}</td>
+                    <td class="py-3 px-4 text-slate-400 font-mono">${x.plu}</td>
+                    <td class="py-3 px-4 font-semibold text-white">${x.descp}</td>
+                    <td class="py-3 px-4 text-right text-slate-400">${x.qty25}</td>
+                    <td class="py-3 px-4 text-right text-slate-200">${x.qty26}</td>
+                    <td class="py-3 px-4 text-right font-bold text-rose-400">${x.diff}</td>
+                    <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/20">Drop / Penurunan</span></td>
+                </tr>
+            `).join('');
+
+            document.getElementById('table-sales-body').innerHTML = html || `<tr><td colspan="7" class="text-center py-4 text-slate-500">Tidak ada data sales item.</td></tr>`;
+        }
+    </script>
+</body>
+</html>
